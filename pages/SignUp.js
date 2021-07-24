@@ -11,37 +11,47 @@ import {
   HStack,
   Link,
   Text,
+  Spinner,
 } from "native-base";
-import * as firebase from 'firebase';
+import CustomAuthentication from "../auth/customAuth";
+import {Validate} from "../auth/customAuth";
 
-export default function SignUp() {
+
+export default function SignUp({ navigation }) {
+  const [loader, setLoader] = useState(false);
   const [AuthDetails, setAuthDetails] = useState({
     email: "",
     password: "",
-    confirmPassword: ""
-  })
-
+    confirmPassword: "",
+  });
 
   const handleSubmit = () => {
-    console.log(AuthDetails.email, AuthDetails.password,  AuthDetails.confirmPassword);
+    setLoader(true);
     if (AuthDetails.password === AuthDetails.confirmPassword) {
-      firebase
-        .auth()
-        .createUserWithEmailAndPassword(AuthDetails.email, AuthDetails.password)
-        .then((userCredential) => {
-          // Signed in
-          var user = userCredential.user;
-           console.log(user)
-          // ...
-        })
-        .catch((error) => {
-          var errorCode = error.code;
-          var errorMessage = error.message;
-          console.log(errorMessage)
-          // ..
-        });
+      CustomAuthentication(
+        AuthDetails.email,
+        AuthDetails.password,
+        navigation,
+        setLoader
+      );
+    } else {
+      setLoader(false);
+      Alert.alert('Password Not Matches');
     }
+    setAuthDetails({
+      email: "",
+      password: "",
+      confirmPassword: "",
+    });
   };
+
+  if (loader) {
+    return (
+      <Center height={"100%"} width={"100%"}>
+        <Spinner color="cyan" size="large" />
+      </Center>
+    );
+  }
 
   return (
     <Center height={"100%"} width={"100%"}>
@@ -63,7 +73,9 @@ export default function SignUp() {
             <Input
               type="email"
               value={AuthDetails.email}
-              onChangeText={text => setAuthDetails({...AuthDetails, email: text})}
+              onChangeText={(text) =>
+                setAuthDetails({ ...AuthDetails, email: text })
+              }
             />
           </FormControl>
           <FormControl>
@@ -76,7 +88,9 @@ export default function SignUp() {
               type="password"
               name="password"
               value={AuthDetails.password}
-              onChangeText={text=> setAuthDetails({...AuthDetails, password: text})}
+              onChangeText={(text) =>
+                setAuthDetails({ ...AuthDetails, password: text })
+              }
             />
           </FormControl>
           <FormControl>
@@ -89,7 +103,9 @@ export default function SignUp() {
               type="password"
               name="confirmpassword"
               value={AuthDetails.confirmPassword}
-              onChangeText={text => setAuthDetails({...AuthDetails, confirmPassword: text})}
+              onChangeText={(text) =>
+                setAuthDetails({ ...AuthDetails, confirmPassword: text })
+              }
             />
           </FormControl>
           <VStack space={2} mt={3}>
@@ -97,6 +113,7 @@ export default function SignUp() {
               colorScheme="cyan"
               _text={{ color: "white" }}
               onPress={handleSubmit}
+              disabled={!Validate(AuthDetails.email, AuthDetails.password, AuthDetails.confirmPassword)}
             >
               SignUp
             </Button>
